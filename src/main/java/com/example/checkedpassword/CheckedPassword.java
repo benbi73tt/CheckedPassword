@@ -18,7 +18,7 @@ import java.io.IOException;
 
 public class CheckedPassword extends Application {
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage stage) throws IOException, Exception {
         Parent root = FXMLLoader.load(getClass().getResource("hello-view.fxml"));
         stage.setTitle("Checked Password!");
         Scene scene = new Scene(root, 700, 400);
