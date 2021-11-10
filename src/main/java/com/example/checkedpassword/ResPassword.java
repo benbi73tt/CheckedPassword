@@ -73,50 +73,41 @@ public class ResPassword {
         System.out.println(contents);
         System.out.println(contents.length());
         String[] sshd;
-        String sshdString = null;
-        String[] ipAdress;
-        String adress = null;
+        String sshdString = "";
+        String[] ipAddress;
+        String ipAddressString = "";
         String[] ports;
+        String portsString = "";
 
-
-        // sshd = contents.toString().split()
         String[] arr = contents.toString().split("\\s*(|-|_|—|,|\\.)\\s");
-        Pattern ip = Pattern.compile("(\\d{0,3}\\.){3}\\d{0,3}");
-        for (int i = 0; i < arr.length; i++) {
-            Matcher m = ip.matcher(arr[i]);
-            if (m.find()) {
-                System.out.println(m.group());
-                adress += m.group() + " ";
-            }
-        }
-        ipAdress = adress.split("\\s*(|-|_|—|,|\\.)\\s");
 
-        Pattern pattern = Pattern.compile("\\b*(sshd\\[\\d+\\])");
+        Pattern ipPattern = Pattern.compile("(\\d{0,3}\\.){3}\\d{0,3}");
+        Pattern sshdPattern = Pattern.compile("\\b*(sshd\\[\\d+\\])");
+        Pattern portPattern = Pattern.compile("\\b(port)\\b");
+
         for (int i = 0; i < arr.length; i++) {
-            Matcher matcher = pattern.matcher(arr[i]);
-            System.out.println(matcher);
-            while (matcher.find()) {
-                String word = matcher.group();
+            Matcher ipMatcher = ipPattern.matcher(arr[i]);
+            Matcher sshdMatcher = sshdPattern.matcher(arr[i]);
+            Matcher portsMatcher = portPattern.matcher(arr[i]);
+            if (ipMatcher.find()) {
+                ipAddressString += ipMatcher.group() + " ";
+            }
+            while (sshdMatcher.find()) {
+                String word = sshdMatcher.group();
                 if (word.toLowerCase().startsWith("s"))
                     sshdString += word + " ";
             }
-        }
-        sshd = sshdString.split("\\s*(|-|_|—|,|\\.)\\s");
-
-        Pattern portPattern = Pattern.compile("port");
-        for (int i = 0; i<arr.length;i++){
-            Matcher matcher = portPattern.matcher(arr[i]);
-            System.out.println(matcher);
-            while (matcher.find()) {
-                String word = matcher.group();
-                System.out.println(word);
-                if (word.toLowerCase().startsWith("p")){
-                    System.out.println(word);
-                }
-
+            while (portsMatcher.find()){
+                String word = portsMatcher.group();
+                if (word.toLowerCase().startsWith("p"))
+                    portsString += arr[i+1]+" ";
             }
         }
-            Collections.addAll(fileList, sshd);
+        ipAddress = ipAddressString.split("\\s*(|-|_|—|,|\\.)\\s");
+        sshd = sshdString.split("\\s*(|-|_|—|,|\\.)\\s");
+        ports = portsString.split("\\s*(|-|_|—|,|\\.)\\s");
+
+        Collections.addAll(fileList, ipAddress);
     }
 
     private static String readUsingFiles(String fileName) throws IOException {
