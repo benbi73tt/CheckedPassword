@@ -9,11 +9,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import java.util.ResourceBundle;
+
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
+import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -34,11 +36,31 @@ public class ResPassword {
     @FXML
     private Button resultButton;
 
+    @FXML
+    private TabPane tPn;
+
+    @FXML
+    private TextArea txtIPAddress;
+
+    @FXML
+    private TextArea txtPorts;
+
+    @FXML
+    private TextArea txtSshd;
+
     private File selectedFile;
 
     private String contents;
 
-    public List<String> fileList = new ArrayList<>();
+    private String[] ports;
+
+    private String[] sshd;
+
+    private String[] ipAddress;
+
+    private static String apply(Map.Entry<String, Integer> it) {
+        return it.getKey() + " = " + it.getValue();
+    }
 
     @FXML
     void initialize() {
@@ -63,23 +85,20 @@ public class ResPassword {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            System.out.println(duplicate());
+            txtSshd.setText(duplicate(sshd));
+            txtIPAddress.setText(duplicate(ipAddress));
+            txtPorts.setText(duplicate(ports));
         });
-
     }
 
     private void read() throws Exception {
         contents = readUsingFiles(String.valueOf(selectedFile));
-        System.out.println(contents);
-        System.out.println(contents.length());
-        String[] sshd;
+
         String sshdString = "";
-        String[] ipAddress;
         String ipAddressString = "";
-        String[] ports;
         String portsString = "";
 
-        String[] arr = contents.toString().split("\\s*(|-|_|—|,|\\.)\\s");
+        String[] arr = contents.split("\\s*(|-|_|—|,|\\.)\\s");
 
         Pattern ipPattern = Pattern.compile("(\\d{0,3}\\.){3}\\d{0,3}");
         Pattern sshdPattern = Pattern.compile("\\b*(sshd\\[\\d+\\])");
@@ -97,33 +116,34 @@ public class ResPassword {
                 if (word.toLowerCase().startsWith("s"))
                     sshdString += word + " ";
             }
-            while (portsMatcher.find()){
+            while (portsMatcher.find()) {
                 String word = portsMatcher.group();
                 if (word.toLowerCase().startsWith("p"))
-                    portsString += arr[i+1]+" ";
+                    portsString += arr[i + 1] + " ";
             }
         }
         ipAddress = ipAddressString.split("\\s*(|-|_|—|,|\\.)\\s");
         sshd = sshdString.split("\\s*(|-|_|—|,|\\.)\\s");
         ports = portsString.split("\\s*(|-|_|—|,|\\.)\\s");
 
-        Collections.addAll(fileList, ipAddress);
+
     }
 
     private static String readUsingFiles(String fileName) throws IOException {
         return new String(Files.readAllBytes(Paths.get(fileName)));
     }
 
-    public List<String> duplicate() {
+    public String duplicate(String[] arr) {
+        List<String> fileList = new ArrayList<>();
+        Collections.addAll(fileList, arr);
         Map<String, Integer> counter = new HashMap<>();
         for (String x : fileList) {
             int newValue = counter.getOrDefault(x, 0) + 1;
             counter.put(x, newValue);
         }
-        return counter.entrySet().stream().sorted(Map.Entry.<String, Integer>comparingByValue()
-                .reversed()).map(it -> {
-            return it.getKey() + " = " + it.getValue();
-        }).collect(Collectors.toList());
+        String s = counter.entrySet().stream().sorted(Map.Entry.<String, Integer>comparingByValue()
+                .reversed()).map(ResPassword::apply).collect(Collectors.toList()).subList(0, 10).toString();
+        return s.replaceAll(",", "  ");
     }
 
     private void configuringFileChooser(FileChooser fileChooser) {
