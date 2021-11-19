@@ -15,7 +15,6 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -48,6 +47,9 @@ public class ResPassword {
     @FXML
     private TextArea txtSshd;
 
+    @FXML
+    private TextArea txtUsers;
+
     private File selectedFile;
 
     private String contents;
@@ -57,6 +59,8 @@ public class ResPassword {
     private String[] sshd;
 
     private String[] ipAddress;
+
+    private String[] users;
 
     private static String apply(Map.Entry<String, Integer> it) {
         return it.getKey() + " = " + it.getValue();
@@ -79,7 +83,6 @@ public class ResPassword {
         });
 
         resultButton.setOnAction(actionEvent -> {
-            System.out.println("hello");
             try {
                 read();
             } catch (Exception e) {
@@ -88,6 +91,7 @@ public class ResPassword {
             txtSshd.setText(duplicate(sshd));
             txtIPAddress.setText(duplicate(ipAddress));
             txtPorts.setText(duplicate(ports));
+            txtUsers.setText(duplicate(users));
         });
     }
 
@@ -97,17 +101,22 @@ public class ResPassword {
         String sshdString = "";
         String ipAddressString = "";
         String portsString = "";
+        String usersString = "";
 
         String[] arr = contents.split("\\s*(|-|_|—|,|\\.)\\s");
 
         Pattern ipPattern = Pattern.compile("(\\d{0,3}\\.){3}\\d{0,3}");
         Pattern sshdPattern = Pattern.compile("\\b*(sshd\\[\\d+\\])");
         Pattern portPattern = Pattern.compile("\\b(port)\\b");
+        Pattern userPattern = Pattern.compile("\\b(for)\\b");
+        Pattern userInvalidPattern = Pattern.compile("\\b(user)\\b");
 
         for (int i = 0; i < arr.length; i++) {
             Matcher ipMatcher = ipPattern.matcher(arr[i]);
             Matcher sshdMatcher = sshdPattern.matcher(arr[i]);
             Matcher portsMatcher = portPattern.matcher(arr[i]);
+            Matcher usersMatcher = userPattern.matcher(arr[i]);
+            Matcher usersInvalidMatcher = userInvalidPattern.matcher(arr[i]);
             if (ipMatcher.find()) {
                 ipAddressString += ipMatcher.group() + " ";
             }
@@ -121,12 +130,23 @@ public class ResPassword {
                 if (word.toLowerCase().startsWith("p"))
                     portsString += arr[i + 1] + " ";
             }
+            while (usersMatcher.find()) {
+                String word = usersMatcher.group();
+                if (word.toLowerCase().startsWith("f"))
+                    if (!(arr[i + 1].toLowerCase().startsWith("invalid")))
+                        usersString += arr[i + 1] + " ";
+            }
+            while (usersInvalidMatcher.find()) {
+                String word = usersInvalidMatcher.group();
+                if (word.toLowerCase().startsWith("user"))
+                    if (!(arr[i + 1].toLowerCase().startsWith("from")))
+                        usersString += arr[i + 1] + " ";
+            }
         }
         ipAddress = ipAddressString.split("\\s*(|-|_|—|,|\\.)\\s");
         sshd = sshdString.split("\\s*(|-|_|—|,|\\.)\\s");
         ports = portsString.split("\\s*(|-|_|—|,|\\.)\\s");
-
-
+        users = usersString.split("\\s*(|-|_|—|,|\\.)\\s");
     }
 
     private static String readUsingFiles(String fileName) throws IOException {
@@ -142,19 +162,14 @@ public class ResPassword {
             counter.put(x, newValue);
         }
         String s = counter.entrySet().stream().sorted(Map.Entry.<String, Integer>comparingByValue()
-                .reversed()).map(ResPassword::apply).collect(Collectors.toList()).subList(0, 10).toString();
+                .reversed()).limit(10).map(ResPassword::apply).collect(Collectors.toList()).toString();
         return s.replaceAll(",", "  ");
     }
 
     private void configuringFileChooser(FileChooser fileChooser) {
-        // Set title for FileChooser
         fileChooser.setTitle("Select Some Files");
-
-        // Set Initial Directory
         fileChooser.setInitialDirectory(new File("C:/"));
-
         fileChooser.getExtensionFilters().addAll(//
                 new FileChooser.ExtensionFilter("TXT", "*.txt"));
-
     }
 }

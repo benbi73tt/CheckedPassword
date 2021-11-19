@@ -80,6 +80,19 @@
                                 </AnchorPane>
                             </content>
                         </Tab>
+                  <Tab text="Users">
+                     <content>
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                           <children>
+                              <TextArea fx:id="txtUsers" layoutX="-10.0" onScroll="#initialize" onScrollFinished="#initialize" onScrollStarted="#initialize" prefHeight="195.0" prefWidth="714.0" wrapText="true">
+                                 <font>
+                                    <Font name="Berlin Sans FB Demi Bold" size="20.0" />
+                                 </font>
+                              </TextArea>
+                           </children>
+                        </AnchorPane>
+                     </content>
+                  </Tab>
                     </tabs>
                 </TabPane>
             </children>
